@@ -1,0 +1,13 @@
+Aggiungi queste righe al tuo file .env.local del marketplace:
+
+BITCOIN_RPC_URL=http://127.0.0.1:18443
+BITCOIN_RPC_COOKIE_PATH=C:\btc-poc\regtest\.cookie
+PLATFORM_XPUB=[da318210/84'/1'/0']tpubDCqFfjsRMVjzxiDQ7qKNBe7wwj8cXUHA9p1EdfiuhwtapfVhjwHCsc6dU9Eg2ao5UHu56eWbzrch1wu2yASzDPKyJ6zE5cG5KaHqePZGS4o
+ESCROW_CONCORDATA_BLOCKS=5
+ESCROW_BUYER_TIMELOCK_BLOCKS=10
+
+NOTE PER I TEST:
+- BUYER_MNEMONIC=valid innocent cargo crucial conduct animal wink timber exclude accident uncover fee
+- SELLER_MNEMONIC=clog claim napkin dignity follow seven dutch cigar later stereo scene odor
+
+Usa queste mnemonic per creare wallet buyer e seller nel frontend marketplace.
