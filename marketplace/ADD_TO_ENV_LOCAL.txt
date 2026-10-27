@@ -1,11 +1,10 @@
 # Local Bitcoin test environment setup
-# Copy the required variable names into marketplace/.env.local and fill them locally.
-# Never commit .env.local, wallet mnemonics, private keys, or Supabase secret keys.
+# Copy only the needed variables into marketplace/.env.local. Do not commit that file.
+# Never put buyer/seller recovery phrases in server environment variables.
 
 BITCOIN_RPC_URL=http://127.0.0.1:18443
 BITCOIN_RPC_COOKIE_PATH=C:\\btc-poc\\regtest\\.cookie
 
-# Set locally only; never paste real or test mnemonic/private-key values into Git.
+# DEV/REGTEST ONLY: the current prototype still uses a platform signing key.
+# Do not use real funds or deploy this key design to production.
 PLATFORM_MNEMONIC=
-BUYER_MNEMONIC=
-SELLER_MNEMONIC=
