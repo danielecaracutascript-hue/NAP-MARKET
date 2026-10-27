@@ -274,6 +274,6 @@ export async function verifyRefundPsbt(a: {
 
 // ---------------------------------------------------------------- RIMBORSO
 
-export type RefundKind = "return" | "dispute" | "no_shipment";
+
 
 // Il motivo del rimborso si ricava dalla cronologia scritta dal database.
