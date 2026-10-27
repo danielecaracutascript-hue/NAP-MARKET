@@ -1,95 +1,26 @@
-# Setup Completo - Bitcoin Marketplace
+# Setup ambiente di test - Bitcoin Marketplace
 
-## ✅ Fatto automaticamente
+Queste istruzioni sono per un ambiente locale **regtest**. Non inserire mai seed, mnemonic, chiavi private o credenziali Supabase nei file versionati.
 
-1. **Wallet Bitcoin Core creati** sul nodo regtest:
-   - miner, buyer, seller, platform, escrow1, shipping
-   - Balance miner: 6598+ BTC
+## Configurazione locale
 
-2. **Chiavi generate** per il test:
-   - PLATFORM_XPUB: `[da318210/84'/1'/0']tpubDCqFfjsRMVjzxiDQ7qKNBe7wwj8cXUHA9p1EdfiuhwtapfVhjwHCsc6dU9Eg2ao5UHu56eWbzrch1wu2yASzDPKyJ6zE5cG5KaHqePZGS4o`
-   - BUYER_MNEMONIC: `valid innocent cargo crucial conduct animal wink timber exclude accident uncover fee`
-   - SELLER_MNEMONIC: `clog claim napkin dignity follow seven dutch cigar later stereo scene odor`
+1. Avvia Bitcoin Core in regtest e crea/carica i wallet di test necessari.
+2. Crea `marketplace/.env.local` copiando le variabili necessarie da `marketplace/.env.example` e `marketplace/.env.bitcoin.example`.
+3. Inserisci i valori segreti solo nel file locale `.env.local`, che non deve essere versionato.
+4. Per l'RPC locale, verifica che URL e percorso del cookie corrispondano alla configurazione effettiva di Bitcoin Core.
+5. Avvia i controlli dalla cartella `marketplace` con `npm ci`, `npm run lint` e `npm run build`.
 
-3. **Script di test creati**:
-   - `poc-firma/init-wallets.cjs` - inizializza wallet Bitcoin Core
-   - `poc-firma/get-platform-xpub.cjs` - ottiene la chiave piattaforma
-   - `poc-firma/get-all-xpubs.cjs` - ottiene tutte le chiavi
-   - `marketplace/test-bitcoin.js` - verifica connessione RPC
+## Sicurezza
 
-## 🔵 Azioni richieste (da fare manualmente)
+- Non conservare mnemonic in `poc-firma/keys.json` o in altri file del repository.
+- Non usare credenziali reali in test o documentazione.
+- Le chiavi pubbliche estese (xpub) non consentono di spendere fondi, ma possono esporre informazioni sulla cronologia degli indirizzi.
+- Rimuovere un segreto dal file corrente non lo rimuove dalla cronologia Git. Per segreti già pubblicati, ruotare/revocare le credenziali e valutare la riscrittura della cronologia.
+- Tutti i test di firma e transazione devono usare regtest/signet e fondi di test.
 
-### 1. Aggiorna .env.local del marketplace
+## Script utili
 
-Apri `marketplace/.env.local` e aggiungi:
-
-```env
-BITCOIN_RPC_URL=http://127.0.0.1:18443
-BITCOIN_RPC_COOKIE_PATH=C:\btc-poc\regtest\.cookie
-PLATFORM_XPUB=[da318210/84'/1'/0']tpubDCqFfjsRMVjzxiDQ7qKNBe7wwj8cXUHA9p1EdfiuhwtapfVhjwHCsc6dU9Eg2ao5UHu56eWbzrch1wu2yASzDPKyJ6zE5cG5KaHqePZGS4o
-ESCROW_CONCORDATA_BLOCKS=5
-ESCROW_BUYER_TIMELOCK_BLOCKS=10
-```
-
-### 2. Riavvia il dev server
-
-```bash
-cd marketplace
-npm run dev
-```
-
-### 3. Crea account Buyer
-
-1. Vai su http://localhost:3000
-2. Sign up con email/password
-3. Vai su http://localhost:3000/protected/wallet
-4. Clicca "Restore from 12 words"
-5. Inserisci: `valid innocent cargo crucial conduct animal wink timber exclude accident uncover fee`
-6. Imposta password
-7. Clicca "Register public key"
-
-### 4. Crea account Seller
-
-1. Logout
-2. Sign up con email/password diversa
-3. Vai su http://localhost:3000/protected/wallet
-4. Clicca "Restore from 12 words"
-5. Inserisci: `clog claim napkin dignity follow seven dutch cigar later stereo scene odor`
-6. Imposta password
-7. Clicca "Register public key"
-
-### 5. Crea listing (come Seller)
-
-1. Vai su http://localhost:3000/protected/listings
-2. Crea un nuovo listing
-3. Imposta prezzo e dettagli
-
-### 6. Acquista (come Buyer)
-
-1. Logout seller, login buyer
-2. Vai su listings
-3. Acquista il listing
-4. Quando vedi l'ordine, clicca "Get payment details"
-5. **Non dovrebbe più dare errore!**
-
-## 🔧 Troubleshooting
-
-Se ricevi ancora errore "Requested wallet does not exist":
-
-```bash
-cd poc-firma
-node init-wallets.cjs
-```
-
-Per verificare la connessione:
-
-```bash
-cd marketplace
-node test-bitcoin.js
-```
-
-## 📝 Note
-
-- Il nodo Bitcoin Core deve essere in esecuzione su regtest (porta 18443)
-- I wallet sono persistenti, non ricrearli
-- Le mnemonic sono salvate in `poc-firma/keys.json` per riferimento
+- `poc-firma/init-wallets.cjs`: inizializzazione dei wallet Bitcoin Core di test.
+- `poc-firma/get-platform-xpub.cjs`: recupero della chiave pubblica estesa della piattaforma.
+- `poc-firma/get-all-xpubs.cjs`: recupero delle chiavi pubbliche estese dei wallet.
+- `marketplace/test-bitcoin.js`: verifica della connessione RPC.
