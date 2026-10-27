@@ -50,3 +50,8 @@ jobs:
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
         continue-on-error: true
+      - name: Full dependency audit report
+        run: |
+          npm audit --json > audit-report.json || true
+          node -e 'const a=require("./audit-report.json"); for (const [name,v] of Object.entries(a.vulnerabilities||{})) console.log(JSON.stringify({name,severity:v.severity,isDirect:v.isDirect,range:v.range,fixAvailable:v.fixAvailable,via:(v.via||[]).map(x=>typeof x==="string"?x:{name:x.name,title:x.title,range:x.range})}));'
+        continue-on-error: true
