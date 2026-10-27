@@ -35,7 +35,6 @@ type Order = {
   funding_vout: number | null;
   released_txid: string | null;
   refunded_txid: string | null;
-  refunded_txid: string | null;
 };
 type Ev = { type: string; actor_role: string; created_at: string; data?: { decision?: string } | null };
 type Dispute = {
@@ -52,6 +51,7 @@ type Fn =
   | "simulate_payment"
   | "cancel_order"
   | "simulate_delivery"
+  | "confirm_delivery"
   | "confirm_receipt"
   | "request_return"
   | "test_expire_window"
