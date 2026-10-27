@@ -420,6 +420,7 @@ export default function OrderClient({ orderId }: { orderId: string }) {
       {order.status === "SHIPPED" && (
         <div className="space-y-2">
           <p className="text-sm">{isBuyer ? "Your order is on its way." : "Shipped. Waiting for delivery."}</p>
+          {isBuyer && <button onClick={() => act("confirm_delivery")} className={btn}>Confirm delivery received</button>}
           {TEST_MODE && <button onClick={() => act("simulate_delivery")} className={btnOutline}>Simulate delivery (test only)</button>}
         </div>
       )}

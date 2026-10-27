@@ -28,12 +28,18 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     }
 
     const needEscrow = Number(o.price_sats) + Number(o.buyer_commission_sats);
+    if (!needEscrow || isNaN(needEscrow)) {
+      return NextResponse.json({ error: "Invalid order amounts" }, { status: 400 });
+    }
     const utxos = await rpc<Utxo[]>("listunspent", [1, 9999999, [o.escrow_address]], "escrow1");
-    const u = utxos?.find((x) => Math.round(x.amount * 1e8) >= needEscrow);
+    if (!utxos || !Array.isArray(utxos)) {
+      return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
+    }
+    const u = utxos.find((x) => Math.round(x.amount * 1e8) >= needEscrow);
     const received = await rpc<number>("getreceivedbyaddress", [o.shipping_address, 1], "shipping");
     const gotShipping = Math.round(received * 1e8);
 
-    if (!u || !utxos || utxos.length === 0) return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
+    if (!u) return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
     if (gotShipping < Number(o.shipping_sats)) {
       return NextResponse.json({ ok: true, message: "Escrow paid. Shipping payment not confirmed yet" });
     }

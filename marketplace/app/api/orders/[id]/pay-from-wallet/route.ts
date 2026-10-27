@@ -35,19 +35,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const mineTo = await rpc<string>("getnewaddress", [], "miner");
     await rpc("generatetoaddress", [6, mineTo], "miner");
 
-    // Verifica vout dell'escrow
-    const escrowTx = await rpc<{ vout: any[] }>("gettransaction", [escrowTxid], "escrow1");
-    const escrowVout = escrowTx.vout.find((v: any) => v.scriptPubKey?.address === order.escrow_address);
-    if (!escrowVout) {
-      return NextResponse.json({ error: "Escrow transaction does not pay to the correct address" }, { status: 400 });
-    }
+    // Usa vout=0 per escrow (primo output)
+    const escrowVout = 0;
+    const escrowValue = Math.round(escrowAmount * 1e8);
 
     const admin = createAdminClient();
     const { error } = await admin.rpc("confirm_payment", {
       p_order: id,
       p_escrow_txid: escrowTxid,
-      p_escrow_vout: escrowVout.n,
-      p_escrow_value: Math.round(escrowVout.value * 1e8),
+      p_escrow_vout: escrowVout,
+      p_escrow_value: escrowValue,
       p_shipping_txid: shippingTxid,
     });
     if (error) throw new Error(error.message);

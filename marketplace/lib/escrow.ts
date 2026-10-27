@@ -199,8 +199,8 @@ export async function buildRefundPsbt(a: {
   platformAmount: number;
 }): Promise<string> {
   const { lib, network } = await deps();
-  const buyerPub = await derivePubkey(a.buyerXpub, 0, a.index);
-  const platformPub = await derivePubkey(a.platformXpub, 0, a.index);
+  const buyerPub = await derivePubkey(a.buyerXpub, 0, a.index); // Branch 0 per chiavi di firma nel descriptor
+  const platformPub = await derivePubkey(a.platformXpub, 0, a.index); // Branch 0 per chiavi di firma nel descriptor
   const psbt = new lib.Psbt({ network });
   const out = new lib.Output({
     descriptor: libDescriptor(a.descriptor),

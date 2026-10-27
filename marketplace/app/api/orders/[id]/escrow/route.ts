@@ -56,7 +56,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
     const imp = await rpc<{ success: boolean; error?: { message: string } }[]>(
       "importdescriptors",
-      [[{ desc: info.descriptor, timestamp: "now", range: [0, Math.max(idx + 20, 2004)] }]],
+      [[{ desc: info.descriptor, timestamp: "now", range: [0, 10000] }]],
       "escrow1"
     );
     if (!imp[0]?.success) throw new Error("Watch import failed: " + (imp[0]?.error?.message ?? "unknown"));
