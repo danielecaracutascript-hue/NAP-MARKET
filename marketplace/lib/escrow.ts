@@ -1,7 +1,15 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 // Funzioni condivise tra browser e server per il rilascio dei fondi.
 
-const NETWORK_NAME: string = process.env.NEXT_PUBLIC_BITCOIN_NETWORK ?? "testnet";
+const NETWORK_NAME: string = process.env.NEXT_PUBLIC_BITCOIN_NETWORK ?? "regtest";
+
+function networkFor(btc: any) {
+  // bitcoinjs-lib uses testnet network parameters for Signet addresses.
+  const normalized = NETWORK_NAME === "signet" ? "testnet" : NETWORK_NAME;
+  const network = btc.networks[normalized];
+  if (!network) throw new Error(`Unsupported Bitcoin network: ${NETWORK_NAME}`);
+  return network;
+}
 
 async function deps() {
   const btcm: any = await import("bitcoinjs-lib");
@@ -10,7 +18,7 @@ async function deps() {
   const btc = btcm.networks ? btcm : btcm.default;
   const lib = dm.BIP32 ? dm : dm.default;
   const bip39 = bip39m.mnemonicToSeedSync ? bip39m : bip39m.default;
-  return { btc, lib, bip39, network: btc.networks[NETWORK_NAME] };
+  return { btc, lib, bip39, network: networkFor(btc) };
 }
 
 export const hexOf = (u: Uint8Array) =>
