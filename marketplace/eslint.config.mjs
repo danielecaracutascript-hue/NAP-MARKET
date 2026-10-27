@@ -7,11 +7,11 @@ export default defineConfig([
   ...nextTs,
   {
     files: [
-      'app/protected/arbiter/[id]/arbiter-client.tsx',
-      'app/protected/listings/[id]/buy/buy-client.tsx',
-      'app/protected/orders/[id]/order-client.tsx',
-      'app/protected/wallet/page.tsx',
-      'components/theme-switcher.tsx',
+      '**/arbiter-client.tsx',
+      '**/buy-client.tsx',
+      '**/order-client.tsx',
+      '**/wallet/page.tsx',
+      '**/theme-switcher.tsx',
     ],
     rules: { 'react-hooks/set-state-in-effect': 'off' },
   },
