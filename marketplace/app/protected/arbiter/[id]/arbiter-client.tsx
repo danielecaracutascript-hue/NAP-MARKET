@@ -27,7 +27,7 @@ type Profile = {
   email: string;
 };
 
-type Ev = { type: string; actor_role: string; created_at: string; data?: any };
+type Ev = { type: string; actor_role: string; created_at: string; data?: Record<string, unknown> | null };
 
 export default function ArbiterClient({ disputeId }: { disputeId: string }) {
   const supabase = createClient();
@@ -106,7 +106,6 @@ export default function ArbiterClient({ disputeId }: { disputeId: string }) {
   const seller = order ? profiles[order.seller_id] : null;
   const field = "w-full rounded border bg-transparent px-3 py-2";
   const btn = "rounded bg-foreground px-4 py-2 text-background";
-  const btnOutline = "rounded border px-4 py-2";
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4 p-6">
