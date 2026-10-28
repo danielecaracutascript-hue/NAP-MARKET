@@ -31,8 +31,8 @@ export async function previewEscrowV2(
 
   const descriptor = candidateEscrowDescriptor(participants, index);
   const info = await rpc<DescriptorInfo>("getdescriptorinfo", [descriptor]);
-  if (info.hasprivatekeys || info.isrange || !info.issolvable) {
-    throw new Error("Descriptor must be fixed-index, public-only and solvable");
+  if (info.hasprivatekeys || info.isrange) {
+    throw new Error("Descriptor must be fixed-index and public-only");
   }
 
   const addresses = await rpc<string[]>("deriveaddresses", [info.descriptor]);
