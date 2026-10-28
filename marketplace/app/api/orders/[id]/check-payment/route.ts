@@ -35,9 +35,21 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     if (!utxos || !Array.isArray(utxos)) {
       return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
     }
-    const u = utxos.find((x) => Math.round(x.amount * 1e8) >= needEscrow);
+
+    // Never pick an arbitrary UTXO or silently accept an overpayment: the exact
+    // funding outpoint must be unambiguous before binding it to the order.
+    const toSats = (btc: number) => Math.round(btc * 100_000_000);
+    const exactMatches = utxos.filter((x) => toSats(x.amount) === needEscrow);
+    const largerMatches = utxos.filter((x) => toSats(x.amount) > needEscrow);
+    if (exactMatches.length > 1 || (exactMatches.length === 0 && largerMatches.length > 0)) {
+      return NextResponse.json({
+        ok: true,
+        message: "Payment amount is ambiguous or exceeds the order amount. Manual review is required.",
+      });
+    }
+    const u = exactMatches[0];
     const received = await rpc<number>("getreceivedbyaddress", [o.shipping_address, 1], "shipping");
-    const gotShipping = Math.round(received * 1e8);
+    const gotShipping = toSats(received);
 
     if (!u) return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
     if (gotShipping < Number(o.shipping_sats)) {
