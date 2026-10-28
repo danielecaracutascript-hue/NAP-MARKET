@@ -280,8 +280,3 @@ export async function verifyRefundPsbt(a: {
   }
 }
 
-// ---------------------------------------------------------------- RIMBORSO
-
-
-
-// Il motivo del rimborso si ricava dalla cronologia scritta dal database.
