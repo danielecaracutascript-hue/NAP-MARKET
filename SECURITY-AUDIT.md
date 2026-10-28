@@ -14,6 +14,7 @@ Status: prototype/test environment only. This report is not a production securit
 - Migrated ESLint to the native Next.js 16 flat configuration.
 - Made the address-network selection explicit: default to regtest and map signet to BitcoinJS testnet address parameters.
 - Added GitHub Actions checks for dependency installation, lint, TypeScript, production build, and production dependency audit.
+- Hardened the payment confirmation route to validate satoshi amounts as positive safe integers and require an unambiguous escrow funding output; overpayments or multiple matching outputs now require manual review rather than selecting the first UTXO.
 
 ## Findings that still block production
 
@@ -33,7 +34,11 @@ No SQL migrations/schema for the relevant tables, row-level security policies, o
 
 The files have been removed from the current branch tree, but their old commits remain in the public repository history. When the test phase is complete, rotate/revoke exposed credentials and consider a coordinated history rewrite if historical secret material must be removed. Rewriting history changes commit IDs and affects every clone.
 
-### 5. End-to-end Bitcoin tests still require a node
+### 5. Payment confirmation still needs end-to-end and concurrency tests
+
+The confirmation route now rejects ambiguous or excessive escrow outputs instead of arbitrarily choosing one. The database RPC must still enforce an atomic, one-time transition from `CREATED` to funded, and the application must be tested against repeated/concurrent confirmation requests, reorgs, late payments, multiple partial payments, and duplicate outputs. A route-level check alone cannot guarantee atomicity.
+
+### 6. End-to-end Bitcoin tests still require a node
 
 CI validates installation, lint, TypeScript, build, and production dependency audit. It does not have access to the developer's local Bitcoin Core regtest/signet node or a live Supabase test project, so transaction broadcast, confirmation, dispute, refund, and recovery flows still require end-to-end testing against isolated test infrastructure.
 
