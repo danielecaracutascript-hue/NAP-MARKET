@@ -16,6 +16,19 @@ Status: prototype/test environment only. This report is not a production securit
 - Added GitHub Actions checks for dependency installation, lint, TypeScript, production build, and production dependency audit.
 - Hardened the payment confirmation route to validate satoshi amounts as positive safe integers and require an unambiguous escrow funding output; overpayments or multiple matching outputs now require manual review rather than selecting the first UTXO.
 
+## Database findings from the live Supabase export (2026-10-28)
+
+The following findings are based on the RLS policies and RPC definitions exported during the review; they are not inferred from the application code alone.
+
+- `confirm_delivery` was executable by `PUBLIC`/`anon` and selected a `SHIPPED` order without checking that the caller was its buyer. A migration now binds the transition to `auth.uid() = orders.buyer_id`, uses a fixed `search_path`, locks the row, and sets the product's 30-day delivery window.
+- `confirm_payment` was executable by `PUBLIC`/`anon`/`authenticated` and accepts payment identifiers and amounts as arguments without checking the Bitcoin chain in the shown function body. The migration removes client-role execution; the supported app path should verify the payment server-side and call `mark_order_funded`.
+- The `dispute_evidence` INSERT policy only checked `uploader_id = auth.uid()`, so it did not ensure the uploader was a party to the order or the assigned arbiter. The migration replaces it with a membership check.
+- The exported `save_address` function stores `convert_to(trim(p_text), 'UTF8')` in `encrypted_payload`. That is a text-to-bytea conversion, not encryption. Treat existing address payloads as plaintext unless a separate verified encryption layer exists; plan an explicit encryption-at-rest remediation rather than assuming the column name provides protection.
+- The exported order/dispute functions still contain 14-day wording/windows in places, while the product rule is 30 days. The migration corrects `confirm_delivery` only; `simulate_delivery`, `request_return`, `open_dispute`, `finalize_order`, and any client labels must be reconciled in a separate tested change.
+- RLS is enabled but not forced on the exported tables. This is not automatically a vulnerability by itself (table owners and `SECURITY DEFINER` functions can bypass RLS), but it makes auditing function ownership, grants, and privileged call paths especially important.
+
+Migration: `supabase/migrations/20261028120000_harden_rpc_and_dispute_evidence.sql`. Apply to a staging Supabase project first and run the authorization tests before production. It is an additive remediation, not a complete schema baseline.
+
 ## Findings that still block production
 
 ### 1. Platform private key is used by the server
