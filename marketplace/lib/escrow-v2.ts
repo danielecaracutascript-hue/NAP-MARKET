@@ -12,6 +12,7 @@ export type EscrowParticipants = Readonly<{
 }>;
 
 function publicExtendedKey(value: string, role: string): string {
+  if (typeof value !== "string") throw new Error(`Missing public extended key for ${role}`);
   const key = value.trim();
   // Only bare public BIP32 keys are accepted. Do not accept a seed, private
   // extended key, derivation path, or arbitrary descriptor fragment.
