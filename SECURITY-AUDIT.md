@@ -11,6 +11,7 @@ Status: prototype/test environment only. This report is not a production securit
 - Added repository-wide ignore rules for local environment files, backups, key material, build output, and dependencies.
 - Removed a duplicate `RefundKind` declaration and fixed duplicate/type errors in the order client.
 - Pinned Next.js/Supabase dependency versions and refreshed the npm lockfile through CI.
+- Upgraded Next.js and `eslint-config-next` to 16.4.3 after CI's production audit identified critical advisories affecting 16.3.8; the dependency install, lint, TypeScript, build, and production audit passed on the dependency-update commit.
 - Migrated ESLint to the native Next.js 16 flat configuration.
 - Made the address-network selection explicit: default to regtest and map signet to BitcoinJS testnet address parameters.
 - Added GitHub Actions checks for dependency installation, lint, TypeScript, production build, and production dependency audit.
