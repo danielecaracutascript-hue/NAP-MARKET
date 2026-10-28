@@ -41,7 +41,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     const toSats = (btc: number) => Math.round(btc * 100_000_000);
     const exactMatches = utxos.filter((x) => toSats(x.amount) === needEscrow);
     const largerMatches = utxos.filter((x) => toSats(x.amount) > needEscrow);
-    if (exactMatches.length > 1 || (exactMatches.length === 0 && largerMatches.length > 0)) {
+    if (exactMatches.length > 1 || largerMatches.length > 0) {
       return NextResponse.json({
         ok: true,
         message: "Payment amount is ambiguous or exceeds the order amount. Manual review is required.",
