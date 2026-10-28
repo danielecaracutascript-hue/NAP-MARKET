@@ -44,6 +44,10 @@ export async function previewEscrowV2(
     throw new Error("Bitcoin Core did not derive exactly one escrow address");
   }
   const address = addresses[0];
+  const checked = await rpc<{ isvalid: boolean; iswitness?: boolean; witness_version?: number; witness_program?: string }>("validateaddress", [address]);
+  if (!checked.isvalid || checked.iswitness !== true || checked.witness_version !== 0 || checked.witness_program?.length !== 64) {
+    throw new Error("Escrow v2 address must be a valid P2WSH output");
+  }
   if (blockchain.chain === "regtest" && !address.startsWith("bcrt1")) {
     throw new Error("Unexpected regtest address");
   }
