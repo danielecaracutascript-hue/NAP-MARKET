@@ -9,7 +9,7 @@ begin
     raise exception 'Expected missing-input validation to reject null arguments';
   exception
     when raise_exception then
-      if sqlerrm = 'Expected missing-input validation to reject null arguments' then
+      if sqlerrm <> 'Missing escrow v2 assignment input' then
         raise;
       end if;
   end;
@@ -25,7 +25,7 @@ begin
     raise exception 'Expected empty-key validation to reject input';
   exception
     when raise_exception then
-      if sqlerrm = 'Expected empty-key validation to reject input' then
+      if sqlerrm <> 'Missing escrow v2 assignment input' then
         raise;
       end if;
   end;
