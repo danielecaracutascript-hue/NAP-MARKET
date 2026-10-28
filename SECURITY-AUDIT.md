@@ -42,7 +42,7 @@ The current descriptor uses platform, buyer, and seller keys, with timelock alte
 
 ### 3. Database security cannot be fully verified from this repository
 
-No SQL migrations/schema for the relevant tables, row-level security policies, or RPC function definitions were found in the repository tree. The authorization and atomicity of functions such as order state transitions, dispute decisions, escrow setup, release, and refund therefore remain unverified. Export and audit the actual Supabase schema and policies before production.
+The branch now contains a targeted hardening migration based on the 2026-10-28 live export, but it is not a complete, reproducible baseline of the Supabase tables, constraints, indexes, grants, RLS policies, and RPC definitions. The authorization and atomicity of functions such as `open_dispute`, `decide_dispute`, `set_order_escrow`, release, and refund therefore remain only partially verified. Export the complete schema and version it before production.
 
 ### 4. Removing secrets from the current tree does not erase Git history
 
@@ -59,7 +59,8 @@ CI validates installation, lint, TypeScript, build, and production dependency au
 ## Release gate
 
 - [ ] Rotate/revoke exposed Supabase credentials and verify the old credential no longer works.
-- [ ] Review and test the actual Supabase RLS policies and RPC functions.
+- [ ] Export and version a complete Supabase schema baseline, then test all RLS policies and RPC functions against it.
+- [ ] Run `supabase/tests/security_rpc_regression.sql` against staging after applying the hardening migration.
 - [ ] Redesign the escrow so the marketplace does not hold a private signing key and the arbiter's authority is reflected correctly in the spend policy.
 - [ ] Run end-to-end regtest tests for funding, release, refund, dispute outcomes, timelocks, malformed PSBTs, duplicate submissions, and restart/recovery.
 - [ ] Review dependency audit output and repeat all CI checks on the final release commit.
