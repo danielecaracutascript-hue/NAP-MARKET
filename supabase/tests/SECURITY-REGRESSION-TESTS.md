@@ -14,6 +14,9 @@ Do not run destructive setup against production data. Use three test users
 - [ ] Repeating `confirm_delivery(order_id)` fails without adding a second successful transition.
 - [ ] As `anon`, `authenticated`, or `service_role`, calling legacy `confirm_payment(...)` fails with permission denied. The supported server route must use Bitcoin Core verification and `mark_order_funded`, not this legacy RPC.
 
+- [ ] As `authenticated`, `anon`, and `service_role`, calls to `simulate_payment`, `simulate_delivery`, and `test_expire_window` fail with permission denied in the hardened shared/live schema.
+- [ ] Confirm the isolated dev-only simulation grant script is not part of any production deployment workflow.
+
 ## Dispute evidence authorization
 
 - [ ] Buyer can insert evidence for their order's dispute with `uploader_id = auth.uid()`.
