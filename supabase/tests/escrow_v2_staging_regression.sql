@@ -6,7 +6,7 @@ begin
   if not exists (
     select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'public' and c.relname = 'escrow_v2_assignments'
-      and c.relrowsecurity
+      and c.relrowsecurity and c.relforcerowsecurity
   ) then
     raise exception 'escrow_v2_assignments must have RLS enabled';
   end if;
