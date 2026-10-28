@@ -24,3 +24,21 @@ create unique index if not exists escrow_v2_unique_address
   on public.escrow_v2_assignments(network, escrow_address);
 alter table public.escrow_v2_assignments enable row level security;
 revoke all on public.escrow_v2_assignments from public, anon, authenticated;
+
+-- Reject edits to an assignment after its initial insertion.
+create or replace function public.escrow_v2_reject_mutation()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  raise exception 'Escrow v2 assignments cannot be changed or deleted';
+end;
+$$;
+
+create trigger escrow_v2_assignment_immutable
+before update or delete on public.escrow_v2_assignments
+for each row execute function public.escrow_v2_reject_mutation();
+
+revoke all on function public.escrow_v2_reject_mutation()
+  from public, anon, authenticated;
