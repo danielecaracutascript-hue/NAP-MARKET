@@ -39,6 +39,9 @@ export function candidateEscrowDescriptor(
   const buyer = publicExtendedKey(participants.buyerXpub, "buyer");
   const seller = publicExtendedKey(participants.sellerXpub, "seller");
   const arbiter = publicExtendedKey(participants.arbiterXpub, "arbiter");
+  if (buyer.slice(0, 4) !== seller.slice(0, 4) || buyer.slice(0, 4) !== arbiter.slice(0, 4)) {
+    throw new Error("All escrow public keys must use the same network family");
+  }
   if (new Set([buyer, seller, arbiter]).size !== 3) {
     throw new Error("Escrow requires three distinct public extended keys");
   }
