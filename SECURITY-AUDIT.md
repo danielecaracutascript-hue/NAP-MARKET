@@ -22,12 +22,13 @@ The following findings are based on the RLS policies and RPC definitions exporte
 
 - `confirm_delivery` was executable by `PUBLIC`/`anon` and selected a `SHIPPED` order without checking that the caller was its buyer. A migration now binds the transition to `auth.uid() = orders.buyer_id`, uses a fixed `search_path`, locks the row, and sets the product's 30-day delivery window.
 - `confirm_payment` was executable by `PUBLIC`/`anon`/`authenticated` and accepts payment identifiers and amounts as arguments without checking the Bitcoin chain in the shown function body. The migration removes client-role execution; the supported app path should verify the payment server-side and call `mark_order_funded`.
+- The test RPCs `simulate_payment`, `simulate_delivery`, and `test_expire_window` were executable by authenticated users and rely on database flags to gate behavior. The migration revokes API-role execution; an explicitly marked dev-only SQL script is provided to re-enable these only in a disposable test project.
 - The `dispute_evidence` INSERT policy only checked `uploader_id = auth.uid()`, so it did not ensure the uploader was a party to the order or the assigned arbiter. The migration replaces it with a membership check.
 - The exported `save_address` function stores `convert_to(trim(p_text), 'UTF8')` in `encrypted_payload`. That is a text-to-bytea conversion, not encryption. Treat existing address payloads as plaintext unless a separate verified encryption layer exists; plan an explicit encryption-at-rest remediation rather than assuming the column name provides protection.
 - The exported order/dispute functions still contain 14-day wording/windows in places, while the product rule is 30 days. The migration corrects `confirm_delivery` only; `simulate_delivery`, `request_return`, `open_dispute`, `finalize_order`, and any client labels must be reconciled in a separate tested change.
 - RLS is enabled but not forced on the exported tables. This is not automatically a vulnerability by itself (table owners and `SECURITY DEFINER` functions can bypass RLS), but it makes auditing function ownership, grants, and privileged call paths especially important.
 
-Migration: `supabase/migrations/20261028120000_harden_rpc_and_dispute_evidence.sql`. Apply to a staging Supabase project first and run the authorization tests before production. It is an additive remediation, not a complete schema baseline.
+Migration: `supabase/migrations/20261028120000_harden_rpc_and_dispute_evidence.sql`. Apply to a disposable staging Supabase project first and run the authorization tests before production. `supabase/tests/dev-only-simulation-grants.sql` is for isolated development projects only and must never be applied to production. This is an additive remediation, not a complete schema baseline.
 
 ## Findings that still block production
 
