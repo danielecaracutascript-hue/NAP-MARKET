@@ -42,7 +42,7 @@ Use a canonical descriptor format supported by the selected Bitcoin Core and Min
 
 ## Database requirements
 
-The repository currently does not include the Supabase SQL schema, migrations, RLS policies, or RPC definitions. Before changing the application to this design, export and version those definitions. Add migration(s) for immutable escrow key/descriptor binding and arbiter assignment, and audit `open_dispute`, `decide_dispute`, `mark_order_funded`, `mark_order_released`, and `mark_order_refunded` for authorization, concurrency, and replay safety.
+The repository now includes a targeted Supabase hardening migration and RPC privilege regression checks, but it still does not include a complete baseline for the tables, constraints, indexes, grants, RLS policies, and RPC definitions. Before changing the application to this design, export and version that full baseline. Add migration(s) for immutable escrow key/descriptor binding and arbiter assignment, and audit `open_dispute`, `decide_dispute`, `mark_order_funded`, `mark_order_released`, and `mark_order_refunded` for authorization, concurrency, and replay safety.
 
 Do not infer that a client-side role check is sufficient. Every privileged RPC must validate `auth.uid()` and the caller's relationship to the order/dispute within the database transaction.
 
