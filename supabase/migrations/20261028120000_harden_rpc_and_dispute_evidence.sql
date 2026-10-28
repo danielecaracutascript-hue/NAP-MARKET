@@ -55,6 +55,13 @@ grant execute on function public.confirm_delivery(uuid) to authenticated;
 revoke all on function public.confirm_payment(uuid, text, integer, bigint, text)
   from public, anon, authenticated, service_role;
 
+-- Simulation RPCs are guarded only by database settings. Disable them for all
+-- API roles in the shared/live schema; a separate dev-only script documents
+-- how to re-enable them in an isolated test project.
+revoke all on function public.simulate_payment(uuid) from public, anon, authenticated, service_role;
+revoke all on function public.simulate_delivery(uuid) from public, anon, authenticated, service_role;
+revoke all on function public.test_expire_window(uuid) from public, anon, authenticated, service_role;
+
 -- Existing INSERT policy only checked uploader_id=auth.uid(), so any signed-in
 -- user could attach evidence to an arbitrary dispute UUID. Require the caller
 -- to be a party to the order or the assigned arbiter.
