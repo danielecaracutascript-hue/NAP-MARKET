@@ -15,7 +15,7 @@ Status: prototype/test environment only. This report is not a production securit
 - Migrated ESLint to the native Next.js 16 flat configuration.
 - Made the address-network selection explicit: default to regtest and map signet to BitcoinJS testnet address parameters.
 - Added GitHub Actions checks for dependency installation, lint, TypeScript, production build, and production dependency audit.
-- Hardened the payment confirmation route to validate satoshi amounts as positive safe integers and require an unambiguous escrow funding output; overpayments or multiple matching outputs now require manual review rather than selecting the first UTXO.
+- Hardened the payment confirmation route to validate satoshi amounts as positive safe integers and require exactly one escrow UTXO of the expected value; partial, duplicate, or excess escrow outputs and excess shipping payments now require manual review rather than being silently accepted.
 
 ## Database findings from the live Supabase export (2026-10-28)
 
@@ -51,7 +51,7 @@ The files have been removed from the current branch tree, but their old commits 
 
 ### 5. Payment confirmation still needs end-to-end and concurrency tests
 
-The confirmation route now rejects ambiguous or excessive escrow outputs instead of arbitrarily choosing one. The database RPC must still enforce an atomic, one-time transition from `CREATED` to funded, and the application must be tested against repeated/concurrent confirmation requests, reorgs, late payments, multiple partial payments, and duplicate outputs. A route-level check alone cannot guarantee atomicity.
+The confirmation route now rejects partial, duplicate, or excessive escrow outputs and excess shipping payments instead of arbitrarily choosing one. The database RPC must still enforce an atomic, one-time transition from `CREATED` to funded, and the application must be tested against repeated/concurrent confirmation requests, reorgs, late payments, multiple partial payments, and duplicate outputs. A route-level check alone cannot guarantee atomicity.
 
 ### 6. End-to-end Bitcoin tests still require a node
 
