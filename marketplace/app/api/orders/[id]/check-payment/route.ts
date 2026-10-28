@@ -27,8 +27,20 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "Payment details have not been created yet" }, { status: 400 });
     }
 
-    const needEscrow = Number(o.price_sats) + Number(o.buyer_commission_sats);
-    if (!needEscrow || isNaN(needEscrow)) {
+    const priceSats = Number(o.price_sats);
+    const buyerCommissionSats = Number(o.buyer_commission_sats);
+    const shippingSats = Number(o.shipping_sats);
+    const needEscrow = priceSats + buyerCommissionSats;
+    if (
+      !Number.isSafeInteger(priceSats) ||
+      !Number.isSafeInteger(buyerCommissionSats) ||
+      !Number.isSafeInteger(shippingSats) ||
+      priceSats <= 0 ||
+      buyerCommissionSats < 0 ||
+      shippingSats < 0 ||
+      !Number.isSafeInteger(needEscrow) ||
+      needEscrow <= 0
+    ) {
       return NextResponse.json({ error: "Invalid order amounts" }, { status: 400 });
     }
     const utxos = await rpc<Utxo[]>("listunspent", [1, 9999999, [o.escrow_address]], "escrow1");
@@ -52,7 +64,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     const gotShipping = toSats(received);
 
     if (!u) return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
-    if (gotShipping < Number(o.shipping_sats)) {
+    if (gotShipping < shippingSats) {
       return NextResponse.json({ ok: true, message: "Escrow paid. Shipping payment not confirmed yet" });
     }
     if (new Date(o.expires_at).getTime() < Date.now()) {
