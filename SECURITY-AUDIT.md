@@ -65,3 +65,9 @@ CI validates installation, lint, TypeScript, build, and production dependency au
 - [ ] Redesign the escrow so the marketplace does not hold a private signing key and the arbiter's authority is reflected correctly in the spend policy.
 - [ ] Run end-to-end regtest tests for funding, release, refund, dispute outcomes, timelocks, malformed PSBTs, duplicate submissions, and restart/recovery.
 - [ ] Review dependency audit output and repeat all CI checks on the final release commit.
+
+## Legacy escrow mainnet safety gate (2026-10-28)
+
+The escrow creation endpoint and payment-confirmation endpoint now query Bitcoin Core `getblockchaininfo` and reject networks other than `regtest` and `signet` with HTTP 503. This is a defensive guard against accidentally funding newly created legacy escrow orders with real Bitcoin. It is deliberately server-side and does not rely on a browser-supplied network setting.
+
+This is **not** a full production disable switch: previously funded orders and other spending/broadcast endpoints must be audited separately. It also does not replace the 2-of-3 redesign or prove that existing PSBT signing is non-custodial. No Bitcoin Core integration tests were run as part of these two route changes; verify both allowed chains and the rejected mainnet case in CI/integration tests.
