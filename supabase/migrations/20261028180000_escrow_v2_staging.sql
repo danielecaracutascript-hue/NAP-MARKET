@@ -8,7 +8,7 @@ create table if not exists public.escrow_v2_assignments (
   buyer_xpub text not null,
   seller_xpub text not null,
   arbiter_xpub text not null,
-  derivation_index integer not null check (derivation_index >= 0),
+  derivation_index integer not null check (derivation_index between 0 and 2147483647),
   network text not null check (network in ('regtest', 'signet')),
   descriptor text not null,
   escrow_address text not null,
@@ -23,6 +23,7 @@ create table if not exists public.escrow_v2_assignments (
 create unique index if not exists escrow_v2_unique_address
   on public.escrow_v2_assignments(network, escrow_address);
 alter table public.escrow_v2_assignments enable row level security;
+alter table public.escrow_v2_assignments force row level security;
 revoke all on public.escrow_v2_assignments from public, anon, authenticated;
 
 -- Reject edits to an assignment after its initial insertion.
@@ -36,6 +37,7 @@ begin
 end;
 $$;
 
+drop trigger if exists escrow_v2_assignment_immutable on public.escrow_v2_assignments;
 create trigger escrow_v2_assignment_immutable
 before update or delete on public.escrow_v2_assignments
 for each row execute function public.escrow_v2_reject_mutation();
