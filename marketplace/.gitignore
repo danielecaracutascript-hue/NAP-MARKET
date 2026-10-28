@@ -40,3 +40,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local secrets and environment files
+.env*
+!.env.example
+!.env.bitcoin.example
+.env.signet.backup
+
+# Local key material and editor backups
+/poc-firma/keys.json
+*.bak

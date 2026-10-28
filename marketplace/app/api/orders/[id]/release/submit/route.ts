@@ -16,6 +16,16 @@ import {
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
+    // Legacy escrow uses a server-held platform signing key. Do not prepare,
+    // sign, or broadcast legacy spends on Bitcoin mainnet.
+    const chain = await rpc<{ chain: string }>("getblockchaininfo");
+    if (chain.chain !== "regtest" && chain.chain !== "signet") {
+      return NextResponse.json(
+        { error: "Legacy escrow spending is restricted to Bitcoin test networks" },
+        { status: 503 }
+      );
+    }
+
     const body = await req.json();
     const signed = String(body.psbt ?? "");
     if (!signed) return NextResponse.json({ error: "Missing transaction" }, { status: 400 });

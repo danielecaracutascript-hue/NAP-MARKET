@@ -7,6 +7,16 @@ import { buildRefundPsbt, payoutAddress, refundAmounts, refundKindFromEvents } f
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
+    // Legacy escrow uses a server-held platform signing key. Do not prepare,
+    // sign, or broadcast legacy spends on Bitcoin mainnet.
+    const chain = await rpc<{ chain: string }>("getblockchaininfo");
+    if (chain.chain !== "regtest" && chain.chain !== "signet") {
+      return NextResponse.json(
+        { error: "Legacy escrow spending is restricted to Bitcoin test networks" },
+        { status: 503 }
+      );
+    }
+
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });

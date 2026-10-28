@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rpc } from "@/lib/bitcoin";
@@ -8,6 +8,16 @@ type Utxo = { txid: string; vout: number; amount: number; confirmations: number 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
+    // Funding confirmation for the legacy escrow is test-only until
+    // server-side signing is removed and the on-chain policy is audited.
+    const chain = await rpc<{ chain: string }>("getblockchaininfo");
+    if (chain.chain !== "regtest" && chain.chain !== "signet") {
+      return NextResponse.json(
+        { error: "Legacy payment confirmation is restricted to Bitcoin test networks" },
+        { status: 503 }
+      );
+    }
+
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
@@ -27,20 +37,51 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "Payment details have not been created yet" }, { status: 400 });
     }
 
-    const needEscrow = Number(o.price_sats) + Number(o.buyer_commission_sats);
-    if (!needEscrow || isNaN(needEscrow)) {
+    const priceSats = Number(o.price_sats);
+    const buyerCommissionSats = Number(o.buyer_commission_sats);
+    const shippingSats = Number(o.shipping_sats);
+    const needEscrow = priceSats + buyerCommissionSats;
+    if (
+      !Number.isSafeInteger(priceSats) ||
+      !Number.isSafeInteger(buyerCommissionSats) ||
+      !Number.isSafeInteger(shippingSats) ||
+      priceSats <= 0 ||
+      buyerCommissionSats < 0 ||
+      shippingSats < 0 ||
+      !Number.isSafeInteger(needEscrow) ||
+      needEscrow <= 0
+    ) {
       return NextResponse.json({ error: "Invalid order amounts" }, { status: 400 });
     }
     const utxos = await rpc<Utxo[]>("listunspent", [1, 9999999, [o.escrow_address]], "escrow1");
     if (!utxos || !Array.isArray(utxos)) {
       return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
     }
-    const u = utxos.find((x) => Math.round(x.amount * 1e8) >= needEscrow);
+
+    // Never pick an arbitrary UTXO or silently accept an overpayment: the exact
+    // funding outpoint must be unambiguous before binding it to the order.
+    const toSats = (btc: number) => Math.round(btc * 100_000_000);
+    // This order uses a unique escrow address. Accept exactly one confirmed
+    // funding UTXO of the expected value; any partial, duplicate, or excess
+    // output requires manual review so extra funds are never silently ignored.
+    if (utxos.length > 1 || utxos.some((x) => toSats(x.amount) !== needEscrow)) {
+      return NextResponse.json({
+        ok: true,
+        message: "Escrow payment is partial, duplicated, or exceeds the expected amount. Manual review is required.",
+      });
+    }
+    const u = utxos[0];
     const received = await rpc<number>("getreceivedbyaddress", [o.shipping_address, 1], "shipping");
-    const gotShipping = Math.round(received * 1e8);
+    const gotShipping = toSats(received);
 
     if (!u) return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
-    if (gotShipping < Number(o.shipping_sats)) {
+    if (gotShipping > shippingSats) {
+      return NextResponse.json({
+        ok: true,
+        message: "Shipping payment exceeds the expected amount. Manual review is required.",
+      });
+    }
+    if (gotShipping < shippingSats) {
       return NextResponse.json({ ok: true, message: "Escrow paid. Shipping payment not confirmed yet" });
     }
     if (new Date(o.expires_at).getTime() < Date.now()) {

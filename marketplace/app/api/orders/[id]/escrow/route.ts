@@ -11,6 +11,17 @@ type Info = { descriptor: string; issolvable: boolean };
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
+    // The legacy escrow still depends on a server-held platform signing key.
+    // Fail closed on any real-money chain until the non-custodial 2-of-3
+    // redesign is implemented and independently tested.
+    const chain = await rpc<{ chain: string }>("getblockchaininfo");
+    if (chain.chain !== "regtest" && chain.chain !== "signet") {
+      return NextResponse.json(
+        { error: "Legacy escrow is restricted to Bitcoin test networks" },
+        { status: 503 }
+      );
+    }
+
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
