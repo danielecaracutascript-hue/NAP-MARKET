@@ -8,6 +8,16 @@ type Utxo = { txid: string; vout: number; amount: number; confirmations: number 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
+    // Funding confirmation for the legacy escrow is test-only until
+    // server-side signing is removed and the on-chain policy is audited.
+    const chain = await rpc<{ chain: string }>("getblockchaininfo");
+    if (chain.chain !== "regtest" && chain.chain !== "signet") {
+      return NextResponse.json(
+        { error: "Legacy payment confirmation is restricted to Bitcoin test networks" },
+        { status: 503 }
+      );
+    }
+
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
