@@ -46,7 +46,7 @@ $function$;
 
 -- Only an authenticated buyer should be able to confirm delivery.
 revoke all on function public.confirm_delivery(uuid) from public, anon;
-grant execute on function public.confirm_delivery(uuid) to authenticated, service_role;
+grant execute on function public.confirm_delivery(uuid) to authenticated;
 
 -- Legacy RPC trusts txid/vout/value parameters and can mark an order FUNDED
 -- without independently checking Bitcoin. Current app confirmation should go
