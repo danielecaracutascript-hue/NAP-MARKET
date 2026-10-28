@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rpc } from "@/lib/bitcoin";
@@ -51,19 +51,26 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     // Never pick an arbitrary UTXO or silently accept an overpayment: the exact
     // funding outpoint must be unambiguous before binding it to the order.
     const toSats = (btc: number) => Math.round(btc * 100_000_000);
-    const exactMatches = utxos.filter((x) => toSats(x.amount) === needEscrow);
-    const largerMatches = utxos.filter((x) => toSats(x.amount) > needEscrow);
-    if (exactMatches.length > 1 || largerMatches.length > 0) {
+    // This order uses a unique escrow address. Accept exactly one confirmed
+    // funding UTXO of the expected value; any partial, duplicate, or excess
+    // output requires manual review so extra funds are never silently ignored.
+    if (utxos.length > 1 || utxos.some((x) => toSats(x.amount) !== needEscrow)) {
       return NextResponse.json({
         ok: true,
-        message: "Payment amount is ambiguous or exceeds the order amount. Manual review is required.",
+        message: "Escrow payment is partial, duplicated, or exceeds the expected amount. Manual review is required.",
       });
     }
-    const u = exactMatches[0];
+    const u = utxos[0];
     const received = await rpc<number>("getreceivedbyaddress", [o.shipping_address, 1], "shipping");
     const gotShipping = toSats(received);
 
     if (!u) return NextResponse.json({ ok: true, message: "Escrow payment not confirmed yet" });
+    if (gotShipping > shippingSats) {
+      return NextResponse.json({
+        ok: true,
+        message: "Shipping payment exceeds the expected amount. Manual review is required.",
+      });
+    }
     if (gotShipping < shippingSats) {
       return NextResponse.json({ ok: true, message: "Escrow paid. Shipping payment not confirmed yet" });
     }
