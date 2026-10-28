@@ -29,6 +29,10 @@ export async function previewEscrowV2(
     throw new Error("Escrow v2 preview is restricted to regtest and signet");
   }
 
+  const keys = Object.values(participants);
+  if (keys.some((key) => !key.trim().startsWith("tpub"))) {
+    throw new Error("Test network requires tpub keys");
+  }
   const descriptor = candidateEscrowDescriptor(participants, index);
   const info = await rpc<DescriptorInfo>("getdescriptorinfo", [descriptor]);
   if (info.hasprivatekeys || info.isrange) {
