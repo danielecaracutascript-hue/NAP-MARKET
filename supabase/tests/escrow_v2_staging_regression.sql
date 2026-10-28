@@ -18,6 +18,16 @@ begin
     raise exception 'escrow v2 staging table must not expose client policies';
   end if;
 
+  if not exists (
+    select 1 from pg_trigger t
+    join pg_class c on c.oid = t.tgrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relname = 'escrow_v2_assignments'
+      and t.tgname = 'escrow_v2_assignment_immutable' and not t.tgisinternal
+  ) then
+    raise exception 'escrow v2 assignments require an immutability trigger';
+  end if;
+
   if has_table_privilege('anon', 'public.escrow_v2_assignments', 'INSERT')
      or has_table_privilege('authenticated', 'public.escrow_v2_assignments', 'INSERT')
      or has_table_privilege('anon', 'public.escrow_v2_assignments', 'UPDATE')
