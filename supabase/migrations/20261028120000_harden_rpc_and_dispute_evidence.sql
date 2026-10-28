@@ -53,9 +53,7 @@ grant execute on function public.confirm_delivery(uuid) to authenticated;
 -- through the server-side Bitcoin Core verifier and mark_order_funded instead.
 -- Disable this legacy RPC for all client roles.
 revoke all on function public.confirm_payment(uuid, text, integer, bigint, text)
-  from public, anon, authenticated;
-grant execute on function public.confirm_payment(uuid, text, integer, bigint, text)
-  to service_role;
+  from public, anon, authenticated, service_role;
 
 -- Existing INSERT policy only checked uploader_id=auth.uid(), so any signed-in
 -- user could attach evidence to an arbitrary dispute UUID. Require the caller
