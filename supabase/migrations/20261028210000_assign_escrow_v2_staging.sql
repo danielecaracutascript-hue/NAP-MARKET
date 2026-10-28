@@ -23,7 +23,7 @@ declare
   o public.orders%rowtype;
   assignment public.escrow_v2_assignments%rowtype;
 begin
-  perform public.escrow_v2_require_inputs(p_order, p_buyer, p_seller, p_arbiter, p_index, p_network, p_descriptor, p_address);
+  perform public.escrow_v2_require_inputs(p_order, p_buyer, p_seller, p_arbiter, p_index, p_network, p_descriptor, p_address, p_buyer_xpub, p_seller_xpub, p_arbiter_xpub);
   select * into o from public.orders where id = p_order for update;
   if not found then
     raise exception 'Order not found';
